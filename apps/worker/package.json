@@ -1,0 +1,24 @@
+{
+  "name": "@nexus/worker",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@nexus/db": "workspace:*",
+    "@nexus/env": "workspace:*",
+    "@nexus/kv": "workspace:*",
+    "bullmq": "^5.41.6",
+    "drizzle-orm": "^0.39.3"
+  },
+  "devDependencies": {
+    "@nexus/tsconfig": "workspace:*",
+    "tsx": "^4.19.3",
+    "typescript": "^5.8.0"
+  }
+}

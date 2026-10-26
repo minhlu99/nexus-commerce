@@ -1,0 +1,48 @@
+services:
+  postgres:
+    image: postgres:18-alpine
+    container_name: nexus-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: nexus
+      POSTGRES_PASSWORD: nexus_password
+      POSTGRES_DB: nexus_commerce
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    command:
+      - "postgres"
+      - "-c"
+      - "io_method=worker"          # Explicitly enable PG 18 AIO background workers
+      - "-c"
+      - "io_combine_limit=256kB"    # Bump from default 128kB for faster sequential/bitmap scans
+      - "-c"
+      - "max_connections=200"
+      - "-c"
+      - "shared_buffers=512MB"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U nexus -d nexus_commerce"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  valkey:
+    image: valkey/valkey:9.1-alpine
+    container_name: nexus-valkey
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - valkey_data:/data
+    # Enable AOF persistence so BullMQ jobs & stock locks survive restarts; noeviction protects queue integrity
+    command: valkey-server --appendonly yes --appendfsync everysec --maxmemory-policy noeviction
+    healthcheck:
+      test: ["CMD", "valkey-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+volumes:
+  postgres_data:
+  valkey_data:

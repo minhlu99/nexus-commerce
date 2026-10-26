@@ -1,0 +1,30 @@
+{
+  "name": "nexus-commerce",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22.0.0"
+  },
+  "packageManager": "pnpm@12.9.1",
+  "scripts": {
+    "dev": "turbo dev",
+    "build": "turbo build",
+    "lint": "biome check .",
+    "lint:fix": "biome check --write .",
+    "format": "biome format --write .",
+    "typecheck": "turbo typecheck",
+    "test": "turbo test",
+    "services:up": "docker compose up -d",
+    "services:down": "docker compose down",
+    "services:logs": "docker compose logs -f",
+    "db:generate": "turbo --filter=@nexus/db db:generate",
+    "db:migrate": "turbo --filter=@nexus/db db:migrate",
+    "db:push": "turbo --filter=@nexus/db db:push",
+    "db:studio": "turbo --filter=@nexus/db db:studio"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^2.4.0",
+    "turbo": "^2.5.0",
+    "typescript": "^5.8.0"
+  }
+}
