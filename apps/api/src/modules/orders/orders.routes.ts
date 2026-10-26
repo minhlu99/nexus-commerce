@@ -39,7 +39,16 @@ export const ordersRoutes = new Hono().post(
     const lockKey = `idempotency:${idempotencyKey}`;
     const acquired = await valkey.set(lockKey, "PROCESSING", "EX", 86400, "NX");
     if (!acquired) {
-      return c.json({ error: "Duplicate request or currently processing" }, 409);
+      const existing = await valkey.get(lockKey);
+      if (existing && existing !== "PROCESSING") {
+        try {
+          const cached = JSON.parse(existing);
+          return c.json({ success: true, cached: true, data: cached }, 200);
+        } catch {
+          // Fall through if not valid JSON
+        }
+      }
+      return c.json({ error: "Duplicate request currently processing" }, 409);
     }
 
     const body = c.req.valid("json");

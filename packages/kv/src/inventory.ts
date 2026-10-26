@@ -91,6 +91,11 @@ export async function commitInventoryPurchase(params: {
   await pipeline.exec();
 }
 
+export async function setPhysicalStock(sku: string, quantity: number): Promise<void> {
+  const physicalKey = `stock:physical:${sku}`;
+  await valkey.set(physicalKey, quantity.toString());
+}
+
 export async function releaseInventoryHold(params: {
   sku: string;
   holderId: string;

@@ -14,6 +14,8 @@
     "format": "biome format --write .",
     "typecheck": "turbo typecheck",
     "test": "turbo test",
+    "test:concurrency": "bun tests/stress/flash-sale.test.ts",
+    "test:k6": "k6 run tests/stress/k6-flash-sale.js",
     "services:up": "docker compose up -d",
     "services:down": "docker compose down",
     "services:logs": "docker compose logs -f",

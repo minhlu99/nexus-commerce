@@ -283,6 +283,9 @@ importers:
       '@nexus/env':
         specifier: workspace:*
         version: link:../env
+      '@nexus/kv':
+        specifier: workspace:*
+        version: link:../kv
       drizzle-orm:
         specifier: ^0.39.3
         version: 0.39.3(postgres@3.4.9)

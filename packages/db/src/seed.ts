@@ -1,3 +1,4 @@
+import { setPhysicalStock } from "@nexus/kv";
 import { db, inventory, products, productVariants, stores } from "./src/index.js";
 
 async function seed() {
@@ -57,7 +58,7 @@ async function seed() {
       })
       .returning();
 
-    // 4. Initialize Inventory
+    // 4. Initialize Inventory (PostgreSQL & Valkey)
     await db.insert(inventory).values([
       {
         variantId: variantBlack!.id,
@@ -71,7 +72,12 @@ async function seed() {
       },
     ]);
 
-    console.log("✅ Seed completed successfully! Created store, product, variants, and stock.");
+    await setPhysicalStock("NEX-PRO-BLK", 100);
+    await setPhysicalStock("NEX-PRO-SLV", 50);
+
+    console.log(
+      "✅ Seed completed successfully! Created store, product, variants, and stock in PG & Valkey.",
+    );
     process.exit(0);
   } catch (err) {
     console.error("❌ Seed failed:", err);
