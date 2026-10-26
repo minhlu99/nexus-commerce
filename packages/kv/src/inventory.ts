@@ -80,23 +80,34 @@ local holds_key = KEYS[2]
 local holder_id = ARGV[1]
 local quantity = tonumber(ARGV[2])
 
-redis.call('DECRBY', physical_key, quantity)
-redis.call('HDEL', holds_key, holder_id)
-return 1
+-- Idempotent check: only decrement physical stock if the hold still exists in holds_key
+local removed = redis.call('HDEL', holds_key, holder_id)
+if removed == 1 then
+  redis.call('DECRBY', physical_key, quantity)
+end
+return removed
 `;
 
 export async function commitInventoryPurchase(params: {
   sku: string;
   holderId: string;
   quantity: number;
-}): Promise<void> {
+}): Promise<boolean> {
   const { sku, holderId, quantity } = params;
   const physicalKey = `stock:physical:${sku}`;
   const holdsKey = `stock:holds:${sku}`;
 
-  // Atomic Lua execution: prevents double-deduction window where item is decremented
-  // in physical stock but still present in holds hash
-  await valkey.eval(COMMIT_STOCK_LUA, 2, physicalKey, holdsKey, holderId, quantity.toString());
+  // Atomic & Idempotent Lua execution: prevents double-deduction window and duplicate execution
+  const res = (await valkey.eval(
+    COMMIT_STOCK_LUA,
+    2,
+    physicalKey,
+    holdsKey,
+    holderId,
+    quantity.toString(),
+  )) as number;
+
+  return res === 1;
 }
 
 export async function setPhysicalStock(sku: string, quantity: number): Promise<void> {

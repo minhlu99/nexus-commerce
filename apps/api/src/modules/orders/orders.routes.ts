@@ -1,6 +1,6 @@
 import { zValidator } from "@hono/zod-validator";
 import { db, eq, orderItems, orders, outboxEvents, productVariants } from "@nexus/db";
-import { releaseInventoryHold, reserveInventory, valkey } from "@nexus/kv";
+import { commitInventoryPurchase, releaseInventoryHold, reserveInventory, valkey } from "@nexus/kv";
 import { Hono } from "hono";
 import { z } from "zod";
 import type { AuthVariables } from "../../middleware/auth.middleware.js";
@@ -160,6 +160,16 @@ export const ordersRoutes = new Hono<{ Variables: AuthVariables }>().post(
 
         return newOrder;
       });
+
+      // 4. Synchronous Valkey Commit (immediate sub-millisecond consistency)
+      // Guarded by idempotent Lua script (HDEL == 1): outbox worker can safely re-run as crash recovery
+      for (const item of sortedItems) {
+        await commitInventoryPurchase({
+          sku: item.sku,
+          holderId: customerId,
+          quantity: item.quantity,
+        });
+      }
 
       // Mark idempotency key as completed
       await valkey.set(
