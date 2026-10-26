@@ -43,10 +43,12 @@ export const ordersRoutes = new Hono().post(
     }
 
     const body = c.req.valid("json");
+    // Deterministic lexicographical sorting prevents multi-item deadlocks across Valkey & PostgreSQL
+    const sortedItems = [...body.items].sort((a, b) => a.sku.localeCompare(b.sku));
 
     try {
       // 2. Reserve Stock in Valkey (Option A: Dynamic HVALS with HEXPIRE)
-      for (const item of body.items) {
+      for (const item of sortedItems) {
         const reservation = await reserveInventory({
           sku: item.sku,
           holderId: body.customerId,
@@ -70,7 +72,7 @@ export const ordersRoutes = new Hono().post(
         let totalAmountInCents = 0;
         const resolvedItems = [];
 
-        for (const item of body.items) {
+        for (const item of sortedItems) {
           const variant = await tx.query.productVariants.findFirst({
             where: eq(productVariants.id, item.variantId),
           });

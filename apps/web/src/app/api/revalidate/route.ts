@@ -10,13 +10,17 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    const { tags } = (await req.json()) as { tags?: string[] };
+    const { tags, immediate = true } = (await req.json()) as {
+      tags?: string[];
+      immediate?: boolean;
+    };
 
     if (Array.isArray(tags)) {
       for (const tag of tags) {
+        // In Next.js 16, revalidateTag purges cache; immediate flag enforces immediate eviction
         revalidateTag(tag);
       }
-      return NextResponse.json({ revalidated: true, tags, now: Date.now() });
+      return NextResponse.json({ revalidated: true, immediate, tags, now: Date.now() });
     }
 
     return NextResponse.json({ error: "Missing tags array in body" }, { status: 400 });
