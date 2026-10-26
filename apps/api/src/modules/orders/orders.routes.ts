@@ -3,10 +3,11 @@ import { db, eq, orderItems, orders, outboxEvents, productVariants } from "@nexu
 import { releaseInventoryHold, reserveInventory, valkey } from "@nexus/kv";
 import { Hono } from "hono";
 import { z } from "zod";
+import type { AuthVariables } from "../../middleware/auth.middleware.js";
 
 const createOrderSchema = z.object({
   storeId: z.string().uuid(),
-  customerId: z.string().min(1),
+  customerId: z.string().min(1).optional(), // Optional if user has active Better-Auth session cookie
   items: z
     .array(
       z.object({
@@ -26,7 +27,7 @@ const createOrderSchema = z.object({
   }),
 });
 
-export const ordersRoutes = new Hono().post(
+export const ordersRoutes = new Hono<{ Variables: AuthVariables }>().post(
   "/",
   zValidator("json", createOrderSchema),
   async (c) => {
@@ -56,6 +57,15 @@ export const ordersRoutes = new Hono().post(
     }
 
     const body = c.req.valid("json");
+    // Resolved customer: prefers verified session cookie, falls back to body for synthetic testing
+    const currentUser = c.get("user");
+    const customerId = currentUser?.id ?? body.customerId;
+
+    if (!customerId) {
+      await valkey.del(lockKey);
+      return c.json({ error: "Unauthorized: Active session or customerId required" }, 401);
+    }
+
     // Deterministic lexicographical sorting prevents multi-item deadlocks across Valkey & PostgreSQL
     const sortedItems = [...body.items].sort((a, b) => a.sku.localeCompare(b.sku));
     const acquiredHolds: Array<{ sku: string; quantity: number }> = [];
@@ -65,7 +75,7 @@ export const ordersRoutes = new Hono().post(
       for (const item of sortedItems) {
         const reservation = await reserveInventory({
           sku: item.sku,
-          holderId: body.customerId,
+          holderId: customerId,
           quantity: item.quantity,
           ttlSeconds: 600, // 10 minute hold
         });
@@ -73,7 +83,7 @@ export const ordersRoutes = new Hono().post(
         if (!reservation.success) {
           // Roll back previously acquired holds in this multi-item checkout
           for (const hold of acquiredHolds) {
-            await releaseInventoryHold({ sku: hold.sku, holderId: body.customerId });
+            await releaseInventoryHold({ sku: hold.sku, holderId: customerId });
           }
           await valkey.del(lockKey);
           return c.json(
@@ -118,7 +128,7 @@ export const ordersRoutes = new Hono().post(
           .insert(orders)
           .values({
             storeId: body.storeId,
-            customerId: body.customerId,
+            customerId: customerId,
             status: "pending",
             totalAmountInCents,
             idempotencyKey,
@@ -141,7 +151,7 @@ export const ordersRoutes = new Hono().post(
           aggregateId: newOrder!.id,
           payload: {
             orderId: newOrder!.id,
-            customerId: body.customerId,
+            customerId: customerId,
             items: body.items,
             totalAmountInCents,
           },
@@ -163,7 +173,7 @@ export const ordersRoutes = new Hono().post(
     } catch (err: unknown) {
       // Roll back all acquired holds if transaction or server failed
       for (const hold of acquiredHolds) {
-        await releaseInventoryHold({ sku: hold.sku, holderId: body.customerId });
+        await releaseInventoryHold({ sku: hold.sku, holderId: customerId });
       }
       await valkey.del(lockKey);
       const message = err instanceof Error ? err.message : "Failed to process order";
