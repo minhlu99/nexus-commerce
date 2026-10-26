@@ -1,4 +1,4 @@
-import { getActiveHoldsCount, getPhysicalStock, valkey } from "@nexus/kv";
+import { getActiveHoldsCount, getPhysicalStock, valkey } from "../../packages/kv/src/index";
 
 /**
  * High-Concurrency Flash Sale Stress Test

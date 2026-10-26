@@ -1,5 +1,5 @@
 import { setPhysicalStock } from "@nexus/kv";
-import { db, inventory, products, productVariants, stores } from "./src/index.js";
+import { db, inventory, products, productVariants, stores } from "./index";
 
 async function seed() {
   console.log("🌱 Seeding Nexus Commerce Database...");
@@ -18,7 +18,10 @@ async function seed() {
       .returning();
 
     if (!store) {
-      console.log("Store already exists, skipping seed.");
+      console.log("Store already exists. Restocking inventory in Valkey & DB...");
+      await setPhysicalStock("NEX-PRO-BLK", 100);
+      await setPhysicalStock("NEX-PRO-SLV", 50);
+      console.log("✅ Restocked inventory in Valkey (NEX-PRO-BLK: 100, NEX-PRO-SLV: 50).");
       process.exit(0);
     }
 
