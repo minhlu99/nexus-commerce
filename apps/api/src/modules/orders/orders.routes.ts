@@ -1,6 +1,6 @@
 import { zValidator } from "@hono/zod-validator";
 import { db, eq, orderItems, orders, outboxEvents, productVariants } from "@nexus/db";
-import { reserveInventory, valkey } from "@nexus/kv";
+import { releaseInventoryHold, reserveInventory, valkey } from "@nexus/kv";
 import { Hono } from "hono";
 import { z } from "zod";
 
@@ -39,14 +39,18 @@ export const ordersRoutes = new Hono().post(
     const lockKey = `idempotency:${idempotencyKey}`;
     const acquired = await valkey.set(lockKey, "PROCESSING", "EX", 86400, "NX");
     if (!acquired) {
-      const existing = await valkey.get(lockKey);
-      if (existing && existing !== "PROCESSING") {
-        try {
-          const cached = JSON.parse(existing);
-          return c.json({ success: true, cached: true, data: cached }, 200);
-        } catch {
-          // Fall through if not valid JSON
+      // In-flight simultaneous race handling: poll with backoff for fast-completing request
+      for (let attempt = 0; attempt < 5; attempt++) {
+        const existing = await valkey.get(lockKey);
+        if (existing && existing !== "PROCESSING") {
+          try {
+            const cached = JSON.parse(existing);
+            return c.json({ success: true, cached: true, data: cached }, 200);
+          } catch {
+            // Fall through if not valid JSON
+          }
         }
+        await new Promise((resolve) => setTimeout(resolve, 25));
       }
       return c.json({ error: "Duplicate request currently processing" }, 409);
     }
@@ -54,6 +58,7 @@ export const ordersRoutes = new Hono().post(
     const body = c.req.valid("json");
     // Deterministic lexicographical sorting prevents multi-item deadlocks across Valkey & PostgreSQL
     const sortedItems = [...body.items].sort((a, b) => a.sku.localeCompare(b.sku));
+    const acquiredHolds: Array<{ sku: string; quantity: number }> = [];
 
     try {
       // 2. Reserve Stock in Valkey (Option A: Dynamic HVALS with HEXPIRE)
@@ -66,6 +71,10 @@ export const ordersRoutes = new Hono().post(
         });
 
         if (!reservation.success) {
+          // Roll back previously acquired holds in this multi-item checkout
+          for (const hold of acquiredHolds) {
+            await releaseInventoryHold({ sku: hold.sku, holderId: body.customerId });
+          }
           await valkey.del(lockKey);
           return c.json(
             {
@@ -74,6 +83,7 @@ export const ordersRoutes = new Hono().post(
             409,
           );
         }
+        acquiredHolds.push(item);
       }
 
       // 3. PostgreSQL ACID Transaction (Order + Outbox)
@@ -151,6 +161,10 @@ export const ordersRoutes = new Hono().post(
 
       return c.json({ success: true, data: { orderId: order!.id, status: order!.status } }, 201);
     } catch (err: unknown) {
+      // Roll back all acquired holds if transaction or server failed
+      for (const hold of acquiredHolds) {
+        await releaseInventoryHold({ sku: hold.sku, holderId: body.customerId });
+      }
       await valkey.del(lockKey);
       const message = err instanceof Error ? err.message : "Failed to process order";
       return c.json({ error: message }, 500);

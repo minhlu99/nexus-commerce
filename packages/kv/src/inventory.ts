@@ -74,6 +74,17 @@ export async function reserveInventory(params: {
   };
 }
 
+const COMMIT_STOCK_LUA = `
+local physical_key = KEYS[1]
+local holds_key = KEYS[2]
+local holder_id = ARGV[1]
+local quantity = tonumber(ARGV[2])
+
+redis.call('DECRBY', physical_key, quantity)
+redis.call('HDEL', holds_key, holder_id)
+return 1
+`;
+
 export async function commitInventoryPurchase(params: {
   sku: string;
   holderId: string;
@@ -83,17 +94,25 @@ export async function commitInventoryPurchase(params: {
   const physicalKey = `stock:physical:${sku}`;
   const holdsKey = `stock:holds:${sku}`;
 
-  const pipeline = valkey.pipeline();
-  // Deduct physical stock
-  pipeline.decrby(physicalKey, quantity);
-  // Release user hold
-  pipeline.hdel(holdsKey, holderId);
-  await pipeline.exec();
+  // Atomic Lua execution: prevents double-deduction window where item is decremented
+  // in physical stock but still present in holds hash
+  await valkey.eval(COMMIT_STOCK_LUA, 2, physicalKey, holdsKey, holderId, quantity.toString());
 }
 
 export async function setPhysicalStock(sku: string, quantity: number): Promise<void> {
   const physicalKey = `stock:physical:${sku}`;
   await valkey.set(physicalKey, quantity.toString());
+}
+
+export async function getPhysicalStock(sku: string): Promise<number> {
+  const physicalKey = `stock:physical:${sku}`;
+  const val = await valkey.get(physicalKey);
+  return val ? Number.parseInt(val, 10) : 0;
+}
+
+export async function getActiveHoldsCount(sku: string): Promise<number> {
+  const holdsKey = `stock:holds:${sku}`;
+  return await valkey.hlen(holdsKey);
 }
 
 export async function releaseInventoryHold(params: {
