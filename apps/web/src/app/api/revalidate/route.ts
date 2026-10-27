@@ -1,11 +1,21 @@
+import { timingSafeEqual } from "node:crypto";
 import { env } from "@nexus/env";
 import { revalidateTag } from "next/cache";
 import { type NextRequest, NextResponse } from "next/server";
 
+function isSecretValid(provided: string | null, expected: string): boolean {
+  if (!provided) return false;
+  const a = Buffer.from(provided);
+  const b = Buffer.from(expected);
+  if (a.length !== b.length) return false;
+  return timingSafeEqual(a, b);
+}
+
 export async function POST(req: NextRequest) {
   const secret = req.headers.get("x-revalidate-secret");
 
-  if (secret !== env.REVALIDATE_SECRET) {
+  // Constant-time comparison to prevent side-channel timing attacks
+  if (!isSecretValid(secret, env.REVALIDATE_SECRET)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
