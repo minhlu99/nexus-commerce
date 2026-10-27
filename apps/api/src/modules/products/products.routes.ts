@@ -1,4 +1,5 @@
 import { db, eq, products, productVariants } from "@nexus/db";
+import { getActiveHoldsCount, getPhysicalStock } from "@nexus/kv";
 import { Hono } from "hono";
 
 export const productsRoutes = new Hono()
@@ -32,5 +33,17 @@ export const productsRoutes = new Hono()
       .from(productVariants)
       .where(eq(productVariants.productId, id));
 
-    return c.json({ data: { ...product, variants } });
+    const variantsWithStock = await Promise.all(
+      variants.map(async (v) => {
+        const availableStock = await getPhysicalStock(v.sku);
+        const activeHolds = await getActiveHoldsCount(v.sku);
+        return {
+          ...v,
+          availableStock,
+          activeHolds,
+        };
+      }),
+    );
+
+    return c.json({ data: { ...product, variants: variantsWithStock } });
   });

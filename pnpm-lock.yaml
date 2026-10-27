@@ -199,6 +199,9 @@ importers:
       '@nexus/observability':
         specifier: workspace:*
         version: link:../../packages/observability
+      bullmq:
+        specifier: ^5.41.6
+        version: 5.81.5
       hono:
         specifier: ^4.7.2
         version: 4.13.14
@@ -379,6 +382,9 @@ importers:
       '@nexus/env':
         specifier: workspace:*
         version: link:../env
+      bullmq:
+        specifier: ^5.41.6
+        version: 5.81.5
       ioredis:
         specifier: ^5.5.0
         version: 5.11.1

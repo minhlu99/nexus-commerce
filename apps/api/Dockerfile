@@ -1,11 +1,11 @@
-FROM node:22-alpine AS pruner
+FROM node:26-alpine AS pruner
 RUN apk add --no-cache libc6-compat
 WORKDIR /app
 RUN npm install -g turbo
 COPY . .
 RUN turbo prune @nexus/api --docker
 
-FROM node:22-alpine AS builder
+FROM node:26-alpine AS builder
 RUN apk add --no-cache libc6-compat
 WORKDIR /app
 RUN corepack enable && corepack prepare pnpm@12.9.1 --activate

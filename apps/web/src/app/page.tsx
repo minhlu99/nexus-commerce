@@ -1,4 +1,6 @@
 import { Lock, ShieldCheck, Zap } from "lucide-react";
+import { ArchitectureXRay } from "@/components/architecture-xray";
+import { CustomerFlowStepper } from "@/components/customer-flow-stepper";
 import { ProductCard, type StaticProduct } from "@/components/product-card";
 import { api } from "@/lib/api-client";
 
@@ -68,6 +70,9 @@ export default async function HomePage() {
         </div>
       </section>
 
+      {/* End-to-End Architectural Stepper */}
+      <CustomerFlowStepper />
+
       {/* Product Catalog Grid */}
       <section className="mb-16">
         <div className="mb-6 flex items-center justify-between">
@@ -118,6 +123,9 @@ export default async function HomePage() {
           </div>
         </div>
       </section>
+
+      {/* Floating Architecture X-Ray Drawer */}
+      <ArchitectureXRay />
     </main>
   );
 }

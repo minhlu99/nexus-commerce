@@ -18,6 +18,8 @@ interface ProductVariant {
   sku: string;
   name: string;
   priceInCents: number;
+  availableStock?: number;
+  activeHolds?: number;
 }
 
 interface ProductDetail {
@@ -115,6 +117,39 @@ export function ProductCard({ product }: { product: StaticProduct }) {
               </div>
             </div>
           )
+        )}
+        {/* Scarcity Meter & Live Active Holds */}
+        {selectedVariant && (
+          <div className="mt-4 rounded-lg bg-neutral-50 p-2.5 border border-neutral-100">
+            <div className="flex items-center justify-between text-[11px] mb-1">
+              <span className="font-semibold text-neutral-700">Available Stock</span>
+              <span className="font-mono font-bold text-neutral-900">
+                {selectedVariant.availableStock ?? 0} units
+              </span>
+            </div>
+            <div className="h-1.5 w-full bg-neutral-200 rounded-full overflow-hidden">
+              <div
+                className={`h-full transition-all duration-500 rounded-full ${
+                  (selectedVariant.availableStock ?? 0) < 10
+                    ? "bg-rose-500"
+                    : (selectedVariant.availableStock ?? 0) < 30
+                      ? "bg-amber-500"
+                      : "bg-emerald-500"
+                }`}
+                style={{
+                  width: `${Math.min(100, Math.max(5, ((selectedVariant.availableStock ?? 0) / 100) * 100))}%`,
+                }}
+              />
+            </div>
+            {(selectedVariant.activeHolds ?? 0) > 0 ? (
+              <p className="mt-1.5 text-[10px] font-semibold text-amber-700 flex items-center gap-1">
+                <span>🔥</span>
+                <span>{selectedVariant.activeHolds} shopper(s) holding in cart (HEXPIRE 10m)</span>
+              </p>
+            ) : (
+              <p className="mt-1 text-[10px] text-neutral-400">Zero active checkout contention</p>
+            )}
+          </div>
         )}
       </div>
 
