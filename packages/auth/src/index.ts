@@ -29,6 +29,14 @@ export const auth = betterAuth({
       },
     },
   },
+  session: {
+    expiresIn: 60 * 60 * 24 * 7, // 7 days in Valkey/PG
+    updateAge: 60 * 60 * 24, // Sliding window extension every 24h
+    cookieCache: {
+      enabled: true,
+      maxAge: 60 * 5, // 5-minute HMAC-signed local payload cache for SSR
+    },
+  },
   // Sub-millisecond session cache via Valkey 9.1
   secondaryStorage: {
     get: async (key: string) => {
