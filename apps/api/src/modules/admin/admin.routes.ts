@@ -1,4 +1,5 @@
 import { zValidator } from "@hono/zod-validator";
+import type { auth, UserRole } from "@nexus/auth";
 import {
   db,
   desc,
@@ -10,6 +11,7 @@ import {
   productVariants,
   sql,
 } from "@nexus/db";
+import { env } from "@nexus/env";
 import { getActiveHoldsCount, getPhysicalStock, getQueueMetrics, valkey } from "@nexus/kv";
 import { Hono } from "hono";
 import { z } from "zod";
@@ -27,6 +29,16 @@ const simulateSchema = z.object({
 });
 
 export const adminRoutes = new Hono<{ Variables: AuthVariables }>()
+  // Production Security Guard: Protect all admin endpoints in production
+  .use("*", async (c, next) => {
+    if (env.NODE_ENV === "production") {
+      const user = c.get("user") as (typeof auth.$Infer.Session.user & { role?: UserRole }) | null;
+      if (user?.role !== "admin") {
+        return c.json({ error: "Forbidden: Admin privileges required in production" }, 403);
+      }
+    }
+    await next();
+  })
   /**
    * GET /api/admin/metrics
    * Aggregated live telemetry across PostgreSQL 18, Valkey 9.1, Outbox Relay, and BullMQ Queues

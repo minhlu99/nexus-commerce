@@ -10,6 +10,7 @@ import {
   productVariants,
   sql,
 } from "@nexus/db";
+import { env } from "@nexus/env";
 import { commitInventoryPurchase, releaseInventoryHold, reserveInventory, valkey } from "@nexus/kv";
 import { injectTraceContext, withSpan } from "@nexus/observability";
 import { Hono } from "hono";
@@ -100,13 +101,17 @@ export const ordersRoutes = new Hono<{ Variables: AuthVariables }>()
     }
 
     const body = c.req.valid("json");
-    // Resolved customer: prefers verified session cookie, falls back to body for synthetic testing
+    // Production Security Guard: In production, strictly require verified session cookie
+    // Allow synthetic body.customerId fallback only in development & test environments
     const currentUser = c.get("user");
-    const customerId = currentUser?.id ?? body.customerId;
+    const customerId = currentUser?.id ?? (env.NODE_ENV !== "production" ? body.customerId : null);
 
     if (!customerId) {
       await valkey.del(lockKey);
-      return c.json({ error: "Unauthorized: Active session or customerId required" }, 401);
+      return c.json(
+        { error: "Unauthorized: Valid authenticated session required for checkout" },
+        401,
+      );
     }
 
     // Deterministic lexicographical sorting prevents multi-item deadlocks across Valkey & PostgreSQL

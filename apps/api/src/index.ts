@@ -66,22 +66,46 @@ const app = new Hono<{ Variables: AuthVariables }>()
   )
   .use("*", sessionMiddleware)
   .get("/health", (c) => c.json({ status: "healthy", timestamp: new Date().toISOString() }))
-  // Rate-limit auth endpoints to prevent scrypt libuv saturation and login burst DoS
+  // Dual-Key Rate Limiter on auth endpoints:
+  // - IP Bucket (/64 IPv6 prefix): 10 req / 10s (Anti-Brute Force)
+  // - Target Account Bucket (email): 5 req / 10s (Anti-Distributed Credential Stuffing)
   .use(
     "/api/auth/**",
     slidingWindowRateLimiter({
       windowSeconds: 10,
       maxRequests: 10,
       keyPrefix: "auth-limit",
+      getIdentifier: async (c) => {
+        try {
+          const cloned = c.req.raw.clone();
+          const json = await cloned.json();
+          if (
+            json &&
+            typeof json === "object" &&
+            "email" in json &&
+            typeof json.email === "string"
+          ) {
+            return json.email.toLowerCase().trim();
+          }
+        } catch {
+          // Non-JSON or empty body
+        }
+        return null;
+      },
+      identifierMaxRequests: 5,
     }),
   )
-  // Rate-limit checkout submissions to mitigate bot inventory hoarding
+  // Dual-Key Rate Limiter on checkout submissions:
+  // - IP Bucket: 150 req / 60s (Allows high-concurrency 100-buyer stress tests)
+  // - Authenticated User Bucket: 30 req / 60s (Mitigates inventory hoarding & bot hold flooding)
   .use(
     "/api/orders",
     slidingWindowRateLimiter({
       windowSeconds: 60,
       maxRequests: 150,
       keyPrefix: "orders-limit",
+      getIdentifier: (c) => c.get("user")?.id || null,
+      identifierMaxRequests: 30,
     }),
   )
   // Mount Better Auth router: handles login, signup, session, oauth, signout
