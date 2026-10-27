@@ -7,8 +7,10 @@ import {
   orderItems,
   orders,
   outboxEvents,
+  products,
   productVariants,
   sql,
+  stores,
 } from "@nexus/db";
 import { env } from "@nexus/env";
 import { commitInventoryPurchase, releaseInventoryHold, reserveInventory, valkey } from "@nexus/kv";
@@ -18,7 +20,7 @@ import { z } from "zod";
 import type { AuthVariables } from "../../middleware/auth.middleware.js";
 
 const createOrderSchema = z.object({
-  storeId: z.string().uuid(),
+  storeId: z.string().uuid().optional(),
   customerId: z.string().min(1).optional(), // Optional if user has active Better-Auth session cookie
   items: z
     .array(
@@ -168,7 +170,7 @@ export const ordersRoutes = new Hono<{ Variables: AuthVariables }>()
       const order = await withSpan(
         "pg.checkout_transaction",
         {
-          "nexus.store_id": body.storeId,
+          "nexus.store_id": body.storeId || "auto-resolved",
           "nexus.customer_id": customerId,
         },
         async (span) => {
@@ -198,11 +200,45 @@ export const ordersRoutes = new Hono<{ Variables: AuthVariables }>()
               });
             }
 
+            // Resolve reliable storeId: verify if input exists; if not, query variant's product or default store
+            let resolvedStoreId = body.storeId;
+            if (resolvedStoreId) {
+              const existingStore = await tx.query.stores.findFirst({
+                where: eq(stores.id, resolvedStoreId),
+              });
+              if (!existingStore) {
+                resolvedStoreId = undefined;
+              }
+            }
+
+            if (!resolvedStoreId) {
+              const firstVariant = await tx.query.productVariants.findFirst({
+                where: eq(productVariants.id, sortedItems[0]!.variantId),
+              });
+              if (firstVariant) {
+                const parentProduct = await tx.query.products.findFirst({
+                  where: eq(products.id, firstVariant.productId),
+                });
+                if (parentProduct) {
+                  resolvedStoreId = parentProduct.storeId;
+                }
+              }
+            }
+
+            if (!resolvedStoreId) {
+              const defaultStore = await tx.query.stores.findFirst();
+              if (defaultStore) {
+                resolvedStoreId = defaultStore.id;
+              } else {
+                throw new Error("No active store found to associate order with");
+              }
+            }
+
             // Insert Order
             const [newOrder] = await tx
               .insert(orders)
               .values({
-                storeId: body.storeId,
+                storeId: resolvedStoreId,
                 customerId: customerId,
                 status: "pending",
                 totalAmountInCents,

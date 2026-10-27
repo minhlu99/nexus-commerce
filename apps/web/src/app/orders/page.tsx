@@ -131,16 +131,16 @@ export default function OrdersPage() {
       ) : !orders || orders.length === 0 ? (
         <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-neutral-200 p-12 text-center bg-white">
           <ShoppingBag className="h-12 w-12 text-neutral-300 stroke-[1.5] mb-3" />
-          <h3 className="text-base font-bold text-neutral-900">No Orders Found</h3>
-          <p className="text-xs text-neutral-500 mt-1 max-w-sm">
-            Place an order from the storefront or run the flash-sale stress test to populate
-            customer orders.
+          <h3 className="text-base font-bold text-neutral-900">No Orders Yet</h3>
+          <p className="text-xs text-neutral-500 mt-1 max-w-sm leading-relaxed">
+            You haven&apos;t placed any studio hardware orders yet. Explore our flagship models to
+            audition your first pair.
           </p>
           <Link
             href="/"
-            className="mt-5 rounded-lg bg-neutral-900 px-4 py-2 text-xs font-semibold text-white hover:bg-neutral-800"
+            className="mt-5 rounded-xl bg-neutral-950 px-5 py-2.5 text-xs font-bold text-white hover:bg-neutral-800 transition-colors shadow-xs"
           >
-            Explore Catalog
+            Explore Flagship Catalog
           </Link>
         </div>
       ) : (

@@ -32,6 +32,7 @@ interface ProductDetail {
 export function ProductCard({ product }: { product: StaticProduct }) {
   const { addItem } = useCart();
   const [selectedVariantId, setSelectedVariantId] = useState<string | null>(null);
+  const [isAdded, setIsAdded] = useState(false);
 
   // TanStack Query for volatile live inventory & variant attributes
   const { data: detailData, isLoading } = useQuery<ProductDetail>({
@@ -63,6 +64,11 @@ export function ProductCard({ product }: { product: StaticProduct }) {
       variantName: selectedVariant.name,
       priceInCents: selectedVariant.priceInCents,
     });
+
+    setIsAdded(true);
+    setTimeout(() => {
+      setIsAdded(false);
+    }, 1800);
   };
 
   return (
@@ -193,10 +199,23 @@ export function ProductCard({ product }: { product: StaticProduct }) {
           type="button"
           onClick={handleAddToCart}
           disabled={!selectedVariant || isOutOfStock}
-          className="inline-flex items-center gap-2 rounded-xl bg-neutral-950 px-5 py-2.5 text-xs font-bold text-white shadow-xs hover:bg-neutral-800 disabled:opacity-50 transition-all hover:scale-[1.02] active:scale-[0.98]"
+          className={`inline-flex items-center gap-2 rounded-xl px-5 py-2.5 text-xs font-bold transition-all duration-200 ${
+            isAdded
+              ? "bg-emerald-600 text-white scale-[1.03] shadow-md shadow-emerald-600/20"
+              : "bg-neutral-950 text-white shadow-xs hover:bg-neutral-800 hover:scale-[1.02] active:scale-[0.98]"
+          } disabled:opacity-50`}
         >
-          <Package className="h-3.5 w-3.5" />
-          Add to Bag
+          {isAdded ? (
+            <>
+              <Check className="h-3.5 w-3.5 text-white" />
+              <span>Added to Bag</span>
+            </>
+          ) : (
+            <>
+              <Package className="h-3.5 w-3.5" />
+              <span>Add to Bag</span>
+            </>
+          )}
         </button>
       </div>
     </div>

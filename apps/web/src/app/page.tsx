@@ -9,7 +9,6 @@ import {
   Zap,
 } from "lucide-react";
 import { ArchitectureXRay } from "@/components/architecture-xray";
-import { CustomerFlowStepper } from "@/components/customer-flow-stepper";
 import { ProductCard, type StaticProduct } from "@/components/product-card";
 import { api } from "@/lib/api-client";
 
@@ -88,9 +87,6 @@ export default async function HomePage() {
         <div className="absolute -top-32 -right-32 h-96 w-96 rounded-full bg-emerald-500/10 blur-3xl pointer-events-none" />
         <div className="absolute -bottom-32 -left-32 h-96 w-96 rounded-full bg-blue-500/10 blur-3xl pointer-events-none" />
       </section>
-
-      {/* Customer Journey Stepper (Consumer-First with Tech Toggle) */}
-      <CustomerFlowStepper />
 
       {/* Product Catalog Grid */}
       <section className="mb-16">

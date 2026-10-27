@@ -17,6 +17,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { useCart } from "@/context/cart-context";
 import { api } from "@/lib/api-client";
+import { useSession } from "@/lib/auth-client";
 
 export function CartDrawer() {
   const {
@@ -32,6 +33,7 @@ export function CartDrawer() {
   } = useCart();
 
   const queryClient = useQueryClient();
+  const { data: session } = useSession();
   const [completedOrder, setCompletedOrder] = useState<{ id: string; status: string } | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
@@ -41,15 +43,14 @@ export function CartDrawer() {
 
       // Group cart items and format payload
       const payload = {
-        storeId: "01940000-0000-7000-8000-000000000001", // Default Flagship Store ID or from context
         items: items.map((i) => ({
           variantId: i.variantId,
           sku: i.sku,
           quantity: i.quantity,
         })),
         shippingAddress: {
-          fullName: "Verified Customer",
-          street: "1 Market St",
+          fullName: session?.user?.name || "Verified Shopper",
+          street: "1 Market St, Suite 400",
           city: "San Francisco",
           state: "CA",
           postalCode: "94105",

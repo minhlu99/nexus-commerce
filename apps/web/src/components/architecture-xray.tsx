@@ -48,6 +48,19 @@ export function ArchitectureXRay() {
             </div>
           </div>
 
+          {/* Collapsible 4-Stage Architecture Pipeline */}
+          <details className="mt-3 rounded-lg border border-neutral-100 bg-neutral-50/60 p-2.5">
+            <summary className="cursor-pointer font-mono text-[10px] font-bold text-neutral-700 hover:text-neutral-900 select-none">
+              ▸ 4-Stage High-Concurrency Flow
+            </summary>
+            <div className="mt-2 space-y-1.5 font-mono text-[10px] text-neutral-600 pl-2 border-l-2 border-neutral-300">
+              <div>1. Better Auth session check via Valkey 9.1 secondaryStorage</div>
+              <div>2. Atomic Lua stock hold with 10-minute HEXPIRE sliding TTL</div>
+              <div>3. Dual-write order + outbox_events in single PG18 transaction</div>
+              <div>4. LISTEN/NOTIFY relays outbox to BullMQ for async delivery</div>
+            </div>
+          </details>
+
           <div className="mt-4 pt-3 border-t border-neutral-100 flex items-center justify-between text-[11px] text-neutral-500">
             <span>Trace Context: W3C traceparent</span>
             <span className="font-bold text-emerald-700">BatchSpanProcessor</span>

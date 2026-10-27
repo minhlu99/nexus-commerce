@@ -21,6 +21,18 @@ export function Navbar() {
   const [isAuthenticating, setIsAuthenticating] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const [animateBag, setAnimateBag] = useState(false);
+  const prevCountRef = useRef(totalItemCount);
+
+  // Trigger bounce effect on shopping bag whenever item count increases
+  useEffect(() => {
+    if (totalItemCount > prevCountRef.current) {
+      setAnimateBag(true);
+      const timer = setTimeout(() => setAnimateBag(false), 900);
+      return () => clearTimeout(timer);
+    }
+    prevCountRef.current = totalItemCount;
+  }, [totalItemCount]);
 
   // Close dropdown on click outside
   useEffect(() => {
@@ -136,7 +148,7 @@ export function Navbar() {
 
             {/* Dropdown Menu */}
             {dropdownOpen && (
-              <div className="absolute right-0 mt-2 w-64 rounded-2xl border border-neutral-200 bg-white p-3 shadow-2xl z-50 animate-in fade-in slide-in-from-top-2 duration-150">
+              <div className="absolute right-0 mt-2 w-72 sm:w-80 rounded-2xl border border-neutral-200 bg-white p-3.5 shadow-2xl z-50 animate-in fade-in slide-in-from-top-2 duration-150">
                 {user ? (
                   // Logged In Menu
                   <div>
@@ -205,35 +217,35 @@ export function Navbar() {
                 ) : (
                   // Logged Out Menu
                   <div>
-                    <div className="px-2 pb-2 mb-2 border-b border-neutral-100">
+                    <div className="px-2 pb-2.5 mb-2 border-b border-neutral-100">
                       <div className="text-xs font-bold text-neutral-900">
                         Select a Demo Persona
                       </div>
-                      <p className="text-[11px] text-neutral-500 mt-0.5">
+                      <p className="text-[11px] text-neutral-500 mt-0.5 leading-snug">
                         Test instant Better Auth session validation and role-based permissions:
                       </p>
                     </div>
 
-                    <div className="space-y-1">
+                    <div className="space-y-1.5">
                       <button
                         type="button"
                         onClick={() => handleQuickLogin("customer")}
-                        className="w-full flex items-center justify-between rounded-xl p-2 text-left hover:bg-neutral-50 transition-colors group"
+                        className="w-full flex items-center justify-between gap-2 rounded-xl p-2.5 text-left hover:bg-neutral-50 transition-colors group border border-transparent hover:border-neutral-200/60"
                       >
-                        <div className="flex items-center gap-2.5">
-                          <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-emerald-100 text-emerald-800 text-xs font-bold">
+                        <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-emerald-100 text-emerald-800 text-xs font-bold">
                             AC
                           </div>
-                          <div>
-                            <div className="text-xs font-bold text-neutral-900 group-hover:text-emerald-700">
+                          <div className="min-w-0 flex-1">
+                            <div className="text-xs font-bold text-neutral-900 group-hover:text-emerald-700 truncate">
                               Alex Customer
                             </div>
-                            <div className="text-[10px] text-neutral-400">
+                            <div className="text-[10px] text-neutral-400 truncate">
                               demo.customer@nexus.com
                             </div>
                           </div>
                         </div>
-                        <span className="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">
+                        <span className="shrink-0 text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200/80 px-2 py-0.5 rounded-full">
                           Customer
                         </span>
                       </button>
@@ -241,30 +253,32 @@ export function Navbar() {
                       <button
                         type="button"
                         onClick={() => handleQuickLogin("admin")}
-                        className="w-full flex items-center justify-between rounded-xl p-2 text-left hover:bg-neutral-50 transition-colors group"
+                        className="w-full flex items-center justify-between gap-2 rounded-xl p-2.5 text-left hover:bg-neutral-50 transition-colors group border border-transparent hover:border-neutral-200/60"
                       >
-                        <div className="flex items-center gap-2.5">
-                          <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-purple-100 text-purple-800 text-xs font-bold">
+                        <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-purple-100 text-purple-800 text-xs font-bold">
                             SA
                           </div>
-                          <div>
-                            <div className="text-xs font-bold text-neutral-900 group-hover:text-purple-700">
+                          <div className="min-w-0 flex-1">
+                            <div className="text-xs font-bold text-neutral-900 group-hover:text-purple-700 truncate">
                               Sarah Admin
                             </div>
-                            <div className="text-[10px] text-neutral-400">admin@nexus.com</div>
+                            <div className="text-[10px] text-neutral-400 truncate">
+                              admin@nexus.com
+                            </div>
                           </div>
                         </div>
-                        <span className="text-[10px] font-bold text-purple-600 bg-purple-50 px-2 py-0.5 rounded-full">
+                        <span className="shrink-0 text-[10px] font-bold text-purple-700 bg-purple-50 border border-purple-200/80 px-2 py-0.5 rounded-full">
                           Admin
                         </span>
                       </button>
                     </div>
 
-                    <div className="mt-3 pt-2 border-t border-neutral-100 text-center">
+                    <div className="mt-3 pt-2.5 border-t border-neutral-100 text-center">
                       <Link
                         href="/auth/login"
                         onClick={() => setDropdownOpen(false)}
-                        className="text-xs font-bold text-neutral-700 hover:text-neutral-900 hover:underline"
+                        className="text-xs font-bold text-neutral-700 hover:text-neutral-900 hover:underline inline-block"
                       >
                         Manual Email & Password Login &rarr;
                       </Link>
@@ -293,16 +307,26 @@ export function Navbar() {
             <span className="hidden sm:inline">War Room</span>
           </Link>
 
-          {/* Shopping Bag Trigger */}
+          {/* Shopping Bag Trigger with Dynamic Addition Animation */}
           <button
             type="button"
             onClick={openCart}
-            className="relative flex h-9 w-9 items-center justify-center rounded-full bg-neutral-950 text-white shadow-xs hover:bg-neutral-800 transition-all hover:scale-105"
+            className={`relative flex h-9 w-9 items-center justify-center rounded-full bg-neutral-950 text-white shadow-xs transition-all ${
+              animateBag
+                ? "scale-125 ring-4 ring-emerald-500/40 bg-emerald-950"
+                : "hover:bg-neutral-800 hover:scale-105 active:scale-95"
+            }`}
             aria-label="Shopping Cart"
           >
-            <ShoppingBag className="h-4 w-4" />
+            <ShoppingBag
+              className={`h-4 w-4 transition-transform ${animateBag ? "scale-110 text-emerald-400" : ""}`}
+            />
             {totalItemCount > 0 && (
-              <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-emerald-500 text-[10px] font-black text-white shadow-xs">
+              <span
+                className={`absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-emerald-500 text-[10px] font-black text-white shadow-xs transition-all ${
+                  animateBag ? "scale-125 bg-emerald-400 ring-2 ring-white" : ""
+                }`}
+              >
                 {totalItemCount}
               </span>
             )}

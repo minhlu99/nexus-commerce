@@ -51,7 +51,6 @@ export function CartProvider({ children }: { children: ReactNode }) {
       return [...prev, { ...item, quantity: 1 }];
     });
     rotateIdempotencyKey();
-    setIsOpen(true);
   };
 
   const removeItem = (sku: string) => {

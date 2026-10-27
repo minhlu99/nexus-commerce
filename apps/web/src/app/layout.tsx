@@ -7,8 +7,9 @@ import { Providers } from "@/components/providers";
 import { CartProvider } from "@/context/cart-context";
 
 export const metadata: Metadata = {
-  title: "Nexus Commerce | High-Concurrency Modern E-Commerce",
-  description: "Next.js 16 + Hono RPC + PostgreSQL 18 AIO + Valkey 9.1",
+  title: "NEXUS Acoustic Labs | Precision Studio Sound & Hardware",
+  description:
+    "Direct-to-consumer flagship studio acoustic headphones engineered without compromise. Lossless audio, titanium drivers, and 2-year warranty.",
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {
