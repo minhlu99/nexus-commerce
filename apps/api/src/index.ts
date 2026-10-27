@@ -21,11 +21,15 @@ import { productsRoutes } from "./modules/products/products.routes.js";
 initTelemetry("nexus-api");
 
 const app = new Hono<{ Variables: AuthVariables }>()
-  // 1. Security Headers (Helmet equivalent): HSTS, X-Content-Type-Options, X-Frame-Options, Referrer-Policy
-  .use("*", secureHeaders())
-  // 2. HTTP Payload Compression: Gzip / Deflate for fast JSON transfers
-  .use("*", compress())
-  // 3. Request Body Flood Protection: Reject JSON payloads > 100 KB before memory allocation
+  // 1. Security Headers: Set cross-origin CORP so cross-subdomain & cross-port API calls aren't blocked
+  .use(
+    "*",
+    secureHeaders({
+      crossOriginResourcePolicy: "cross-origin",
+      crossOriginOpenerPolicy: "same-origin-allow-popups",
+    }),
+  )
+  // 2. Request Body Flood Protection (MUST run before any body parsing/cloning)
   .use(
     "*",
     bodyLimit({
@@ -40,6 +44,14 @@ const app = new Hono<{ Variables: AuthVariables }>()
         ),
     }),
   )
+  // 3. Selective HTTP Compression: Applied ONLY to heavy data endpoints
+  // Skips /api/auth/** to eliminate BREACH oracle side-channels, and skips /health (60B)
+  .use("/api/products/*", compress())
+  .use("/api/products", compress())
+  .use("/api/orders/*", compress())
+  .use("/api/orders", compress())
+  .use("/api/admin/*", compress())
+  .use("/api/admin", compress())
   .use("*", async (c, next) => {
     const method = c.req.method;
     const path = c.req.path;

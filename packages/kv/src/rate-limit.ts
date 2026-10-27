@@ -54,7 +54,8 @@ export async function checkAtomicRateLimit(
 ): Promise<RateLimitResult> {
   const now = Date.now();
   const windowMs = windowSeconds * 1000;
-  const member = `${now}-${Math.random().toString(36).slice(2, 8)}`;
+  // Unique UUID member prevents same-millisecond collision overwrites in ZADD
+  const member = `${now}:${crypto.randomUUID()}`;
 
   try {
     const res = (await valkey.eval(
