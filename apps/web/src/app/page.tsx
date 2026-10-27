@@ -1,4 +1,13 @@
-import { Lock, ShieldCheck, Zap } from "lucide-react";
+import {
+  Award,
+  Clock,
+  Headphones,
+  RotateCcw,
+  ShieldCheck,
+  Sparkles,
+  Truck,
+  Zap,
+} from "lucide-react";
 import { ArchitectureXRay } from "@/components/architecture-xray";
 import { CustomerFlowStepper } from "@/components/customer-flow-stepper";
 import { ProductCard, type StaticProduct } from "@/components/product-card";
@@ -36,56 +45,71 @@ export default async function HomePage() {
   const products = await getCachedCatalog();
 
   return (
-    <main className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
-      {/* Hero Section */}
-      <section className="mb-12 rounded-2xl border border-neutral-200 bg-linear-to-b from-white to-neutral-50/50 p-8 shadow-xs sm:p-12">
-        <div className="max-w-3xl">
-          <div className="inline-flex items-center gap-2 rounded-full border border-neutral-200 bg-white px-3 py-1 text-xs font-semibold text-neutral-800 shadow-2xs mb-4">
-            <span className="flex h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
-            Valkey 9.1 HEXPIRE + PostgreSQL 18 AIO Active
+    <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+      {/* Brand Luxury Hero Section */}
+      <section className="relative mb-12 overflow-hidden rounded-3xl border border-neutral-200 bg-linear-to-b from-neutral-900 via-neutral-950 to-black text-white p-8 sm:p-14 shadow-2xl">
+        <div className="relative z-10 max-w-3xl">
+          <div className="inline-flex items-center gap-2 rounded-full border border-neutral-700/60 bg-neutral-800/60 backdrop-blur-md px-3.5 py-1 text-xs font-semibold text-neutral-300 shadow-xs mb-6">
+            <span className="flex h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
+            FLAGSHIP STUDIO SERIES &bull; AUTUMN 2026 DROP
           </div>
-          <h1 className="text-3xl font-black tracking-tight text-neutral-900 sm:text-5xl">
-            Zero-Oversell High Concurrency Commerce.
+
+          <h1 className="text-4xl font-black tracking-tight text-white sm:text-6xl leading-[1.08]">
+            Sound Engineered Without Compromise.
           </h1>
-          <p className="mt-4 text-sm leading-relaxed text-neutral-600 sm:text-base">
-            Engineered with a strict cache boundary: React Server Components with Next.js 16 cache
-            tags for static catalog delivery, paired with client-side TanStack Query and Hono RPC
-            for millisecond-accurate stock reservations.
+
+          <p className="mt-5 text-sm sm:text-base leading-relaxed text-neutral-300 max-w-2xl font-normal">
+            Precision-milled acoustic titanium, custom 40mm beryllium drivers, and lossless spatial
+            latency. Handcrafted for studio purists, producers, and discerning audiophiles.
           </p>
 
-          <div className="mt-6 flex flex-wrap gap-4 text-xs font-medium text-neutral-600">
-            <div className="flex items-center gap-1.5">
-              <ShieldCheck className="h-4 w-4 text-emerald-600" />
-              <span>Transactional Outbox (SKIP LOCKED)</span>
+          {/* Quick Pillars */}
+          <div className="mt-8 flex flex-wrap gap-5 text-xs font-semibold text-neutral-300">
+            <div className="flex items-center gap-2">
+              <Headphones className="h-4 w-4 text-emerald-400" />
+              <span>24-bit Lossless Studio Master</span>
             </div>
-            <div className="flex items-center gap-1.5">
-              <Zap className="h-4 w-4 text-amber-500" />
-              <span>Idempotency Spin-Wait Lock</span>
+            <div className="flex items-center gap-2">
+              <Zap className="h-4 w-4 text-amber-400" />
+              <span>50-Hour Continuous Playback</span>
             </div>
-            <div className="flex items-center gap-1.5">
-              <Lock className="h-4 w-4 text-blue-600" />
-              <span>Better Auth + Valkey Secondary Storage</span>
+            <div className="flex items-center gap-2">
+              <ShieldCheck className="h-4 w-4 text-blue-400" />
+              <span>2-Year Global Studio Warranty</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Truck className="h-4 w-4 text-purple-400" />
+              <span>Complimentary 2-Day Express</span>
             </div>
           </div>
         </div>
+
+        {/* Ambient Glow */}
+        <div className="absolute -top-32 -right-32 h-96 w-96 rounded-full bg-emerald-500/10 blur-3xl pointer-events-none" />
+        <div className="absolute -bottom-32 -left-32 h-96 w-96 rounded-full bg-blue-500/10 blur-3xl pointer-events-none" />
       </section>
 
-      {/* End-to-End Architectural Stepper */}
+      {/* Customer Journey Stepper (Consumer-First with Tech Toggle) */}
       <CustomerFlowStepper />
 
       {/* Product Catalog Grid */}
       <section className="mb-16">
-        <div className="mb-6 flex items-center justify-between">
+        <div className="mb-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <h2 className="text-xl font-bold tracking-tight text-neutral-900">
-              Featured Flagship Releases
+            <div className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-neutral-400 mb-1">
+              <Sparkles className="h-3.5 w-3.5 text-amber-500" />
+              Current Flagship Drop
+            </div>
+            <h2 className="text-2xl font-black tracking-tight text-neutral-900 sm:text-3xl">
+              Precision Acoustic Instruments
             </h2>
-            <p className="text-xs text-neutral-500 mt-0.5">
-              Add variants to cart to test live inventory holds and deterministic idempotency
+            <p className="text-xs text-neutral-500 mt-1">
+              Select your finish below. Real-time stock locks exclusively reserve your pair during
+              checkout.
             </p>
           </div>
-          <span className="rounded-md border border-neutral-200 bg-white px-2.5 py-1 text-xs font-semibold text-neutral-700">
-            {products.length} Products Available
+          <span className="self-start sm:self-auto rounded-full border border-neutral-200 bg-white px-3.5 py-1 text-xs font-bold text-neutral-700 shadow-2xs">
+            {products.length} Editions Available
           </span>
         </div>
 
@@ -96,35 +120,52 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* Architecture Architecture Telemetry Panel */}
-      <section className="rounded-xl border border-neutral-200 bg-white p-6 shadow-xs">
-        <h3 className="text-sm font-bold uppercase tracking-wider text-neutral-400 mb-4">
-          Active Production Telemetry
+      {/* Direct-to-Consumer Trust Pillars */}
+      <section className="mb-16 rounded-2xl border border-neutral-200 bg-white p-8 shadow-xs">
+        <h3 className="text-center text-xs font-black uppercase tracking-wider text-neutral-400 mb-2">
+          The Nexus Direct Standard
         </h3>
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-          <div className="rounded-lg bg-neutral-50 p-4 border border-neutral-100">
-            <span className="text-[11px] font-semibold text-neutral-500 block">
-              DATABASE ENGINE
-            </span>
-            <span className="text-sm font-bold text-neutral-900 mt-1 block">PostgreSQL 18</span>
-            <span className="text-xs text-neutral-500">io_method=worker (AIO enabled)</span>
+        <h4 className="text-center text-xl font-black text-neutral-900 mb-8 sm:text-2xl">
+          Why Discerning Listeners Buy Direct
+        </h4>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="rounded-xl border border-neutral-100 bg-neutral-50/60 p-5">
+            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-neutral-900 text-white mb-3">
+              <Award className="h-4 w-4" />
+            </div>
+            <h5 className="text-sm font-bold text-neutral-900">Direct From Acoustic Lab</h5>
+            <p className="text-xs text-neutral-500 mt-1 leading-relaxed">
+              No retail markups or middleman markdowns. Hand-assembled in calibrated batches with
+              serialized acoustic measurement certificates.
+            </p>
           </div>
-          <div className="rounded-lg bg-neutral-50 p-4 border border-neutral-100">
-            <span className="text-[11px] font-semibold text-neutral-500 block">STOCK ENGINE</span>
-            <span className="text-sm font-bold text-neutral-900 mt-1 block">Valkey 9.1</span>
-            <span className="text-xs text-neutral-500">HEXPIRE Dynamic Holds (noeviction)</span>
+
+          <div className="rounded-xl border border-neutral-100 bg-neutral-50/60 p-5">
+            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-neutral-900 text-white mb-3">
+              <RotateCcw className="h-4 w-4" />
+            </div>
+            <h5 className="text-sm font-bold text-neutral-900">30-Day In-Studio Trial</h5>
+            <p className="text-xs text-neutral-500 mt-1 leading-relaxed">
+              Listen in your own creative space. If they don't surpass your studio references,
+              return them in original packaging for a full refund.
+            </p>
           </div>
-          <div className="rounded-lg bg-neutral-50 p-4 border border-neutral-100">
-            <span className="text-[11px] font-semibold text-neutral-500 block">
-              EVENT DISPATCHER
-            </span>
-            <span className="text-sm font-bold text-neutral-900 mt-1 block">BullMQ Outbox</span>
-            <span className="text-xs text-neutral-500">Zero dual-write loss guarantee</span>
+
+          <div className="rounded-xl border border-neutral-100 bg-neutral-50/60 p-5">
+            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-neutral-900 text-white mb-3">
+              <Clock className="h-4 w-4" />
+            </div>
+            <h5 className="text-sm font-bold text-neutral-900">Guaranteed Inventory Accuracy</h5>
+            <p className="text-xs text-neutral-500 mt-1 leading-relaxed">
+              Our live allocation engine ensures you never receive a "cancelled due to overselling"
+              email. What you order is reserved for you.
+            </p>
           </div>
         </div>
       </section>
 
-      {/* Floating Architecture X-Ray Drawer */}
+      {/* Floating Architecture X-Ray Drawer (Dedicated to technical reviewers & developers) */}
       <ArchitectureXRay />
     </main>
   );

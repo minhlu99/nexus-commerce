@@ -72,7 +72,7 @@ const app = new Hono<{ Variables: AuthVariables }>()
   .use(
     "*",
     cors({
-      origin: [env.NEXT_PUBLIC_APP_URL, "http://localhost:3000"],
+      origin: [env.NEXT_PUBLIC_APP_URL, "http://localhost:3000", "http://localhost:3001"],
       credentials: true,
     }),
   )
