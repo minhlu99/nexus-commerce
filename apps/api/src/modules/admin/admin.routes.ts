@@ -1,3 +1,4 @@
+import os from "node:os";
 import { zValidator } from "@hono/zod-validator";
 import type { auth, UserRole } from "@nexus/auth";
 import {
@@ -141,6 +142,20 @@ export const adminRoutes = new Hono<{ Variables: AuthVariables }>()
         },
         queues: queueMetrics,
         orders: recentOrders,
+        system: {
+          cpuCores: os.cpus().length,
+          cpuModel: os.cpus()[0]?.model || "Host CPU",
+          totalMemoryMb: Math.round(os.totalmem() / (1024 * 1024)),
+          freeMemoryMb: Math.round(os.freemem() / (1024 * 1024)),
+          heapUsedMb: Math.round(process.memoryUsage().heapUsed / (1024 * 1024)),
+          nodeVersion: process.version,
+          platform: os.platform(),
+          concurrencyGuide: {
+            idealBurst: Math.min(1000, os.cpus().length * 50),
+            maximumBurst: Math.min(2500, os.cpus().length * 100),
+            sustainedRps: os.cpus().length * 120,
+          },
+        },
       },
     });
   })
