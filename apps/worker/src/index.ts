@@ -1,4 +1,8 @@
+import { initTelemetry } from "@nexus/observability";
 import { processOutboxBatch } from "./outbox-poller.js";
+
+// Initialize OpenTelemetry distributed tracing
+initTelemetry("nexus-worker");
 
 async function startWorker() {
   console.log("⚡ Nexus Outbox & Queue Worker started");

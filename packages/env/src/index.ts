@@ -13,6 +13,7 @@ export const env = createEnv({
     REVALIDATE_SECRET: z.string().min(16).default("super-secret-revalidation-token-min-16-chars"),
     BETTER_AUTH_SECRET: z.string().min(16).default("better-auth-secret-string-at-least-16-chars"),
     BETTER_AUTH_URL: z.string().url().default("http://localhost:4000"),
+    OTEL_EXPORTER_OTLP_ENDPOINT: z.string().url().default("http://localhost:4318/v1/traces"),
   },
   clientPrefix: "NEXT_PUBLIC_",
   client: {

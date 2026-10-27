@@ -1,6 +1,7 @@
 import { serve } from "@hono/node-server";
 import { auth } from "@nexus/auth";
 import { env } from "@nexus/env";
+import { initTelemetry, withSpan } from "@nexus/observability";
 import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { logger } from "hono/logger";
@@ -9,7 +10,26 @@ import { adminRoutes } from "./modules/admin/admin.routes.js";
 import { ordersRoutes } from "./modules/orders/orders.routes.js";
 import { productsRoutes } from "./modules/products/products.routes.js";
 
+// Initialize OpenTelemetry distributed tracing
+initTelemetry("nexus-api");
+
 const app = new Hono<{ Variables: AuthVariables }>()
+  .use("*", async (c, next) => {
+    const method = c.req.method;
+    const path = c.req.path;
+    return withSpan(
+      `HTTP ${method} ${path}`,
+      {
+        "http.method": method,
+        "http.url": c.req.url,
+        "http.route": path,
+      },
+      async (span) => {
+        await next();
+        span.setAttribute("http.status_code", c.res.status);
+      },
+    );
+  })
   .use("*", logger())
   .use(
     "*",

@@ -13,6 +13,7 @@
     "@nexus/db": "workspace:*",
     "@nexus/env": "workspace:*",
     "@nexus/kv": "workspace:*",
+    "@nexus/observability": "workspace:*",
     "bullmq": "^5.41.6",
     "drizzle-orm": "^0.39.3"
   },
