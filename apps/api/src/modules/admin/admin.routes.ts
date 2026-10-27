@@ -24,7 +24,7 @@ const restockSchema = z.object({
 
 const simulateSchema = z.object({
   sku: z.string().default("NEX-PRO-BLK"),
-  buyerCount: z.number().int().min(1).max(200).default(50),
+  buyerCount: z.number().int().min(1).max(1000).default(100),
   type: z.enum(["flash-sale", "idempotency-burst"]).default("flash-sale"),
 });
 
@@ -238,6 +238,7 @@ export const adminRoutes = new Hono<{ Variables: AuthVariables }>()
           headers: {
             "Content-Type": "application/json",
             "Idempotency-Key": fixedKey,
+            "x-simulation": "true",
           },
           body: JSON.stringify({
             storeId,
@@ -285,6 +286,7 @@ export const adminRoutes = new Hono<{ Variables: AuthVariables }>()
           headers: {
             "Content-Type": "application/json",
             "Idempotency-Key": `sim-flash-${batchId}-${i}`,
+            "x-simulation": "true",
           },
           body: JSON.stringify({
             storeId,

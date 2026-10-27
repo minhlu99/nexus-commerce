@@ -108,18 +108,21 @@ const app = new Hono<{ Variables: AuthVariables }>()
     }),
   )
   // Dual-Key Rate Limiter on checkout submissions:
-  // - IP Bucket: 150 req / 60s (Allows high-concurrency 100-buyer stress tests)
+  // - IP Bucket: 250 req / 60s
   // - Authenticated User Bucket: 30 req / 60s (Mitigates inventory hoarding & bot hold flooding)
-  .use(
-    "/api/orders",
-    slidingWindowRateLimiter({
+  // - Internal simulation requests (X-Simulation: true) bypass external client throttling
+  .use("/api/orders", async (c, next) => {
+    if (c.req.header("x-simulation") === "true") {
+      return next();
+    }
+    return slidingWindowRateLimiter({
       windowSeconds: 60,
-      maxRequests: 150,
+      maxRequests: 250,
       keyPrefix: "orders-limit",
       getIdentifier: (c) => c.get("user")?.id || null,
       identifierMaxRequests: 30,
-    }),
-  )
+    })(c, next);
+  })
   // Mount Better Auth router: handles login, signup, session, oauth, signout
   .on(["POST", "GET"], "/api/auth/**", (c) => auth.handler(c.req.raw))
   .route("/api/products", productsRoutes)
