@@ -1,5 +1,14 @@
 import { zValidator } from "@hono/zod-validator";
-import { db, eq, orderItems, orders, outboxEvents, productVariants } from "@nexus/db";
+import {
+  db,
+  desc,
+  eq,
+  inArray,
+  orderItems,
+  orders,
+  outboxEvents,
+  productVariants,
+} from "@nexus/db";
 import { commitInventoryPurchase, releaseInventoryHold, reserveInventory, valkey } from "@nexus/kv";
 import { Hono } from "hono";
 import { z } from "zod";
@@ -27,10 +36,42 @@ const createOrderSchema = z.object({
   }),
 });
 
-export const ordersRoutes = new Hono<{ Variables: AuthVariables }>().post(
-  "/",
-  zValidator("json", createOrderSchema),
-  async (c) => {
+export const ordersRoutes = new Hono<{ Variables: AuthVariables }>()
+  /**
+   * GET /api/orders
+   * Fetches customer order history sorted by native uuidv7() DESC
+   * (Guaranteed chronological B-Tree ordering without secondary sort index)
+   */
+  .get("/", async (c) => {
+    const user = c.get("user");
+    const queryCustomerId = c.req.query("customerId");
+    const targetCustomerId = user?.id ?? queryCustomerId;
+
+    const baseQuery = db.select().from(orders);
+
+    const userOrders = targetCustomerId
+      ? await baseQuery
+          .where(eq(orders.customerId, targetCustomerId))
+          .orderBy(desc(orders.id))
+          .limit(50)
+      : await baseQuery.orderBy(desc(orders.id)).limit(50);
+
+    if (userOrders.length === 0) {
+      return c.json({ data: [] });
+    }
+
+    // Fetch line item snapshots for these orders
+    const orderIds = userOrders.map((o) => o.id);
+    const items = await db.select().from(orderItems).where(inArray(orderItems.orderId, orderIds));
+
+    const ordersWithItems = userOrders.map((order) => ({
+      ...order,
+      items: items.filter((item) => item.orderId === order.id),
+    }));
+
+    return c.json({ data: ordersWithItems });
+  })
+  .post("/", zValidator("json", createOrderSchema), async (c) => {
     const idempotencyKey = c.req.header("Idempotency-Key");
     if (!idempotencyKey) {
       return c.json({ error: "Missing Idempotency-Key header" }, 400);
@@ -189,5 +230,4 @@ export const ordersRoutes = new Hono<{ Variables: AuthVariables }>().post(
       const message = err instanceof Error ? err.message : "Failed to process order";
       return c.json({ error: message }, 500);
     }
-  },
-);
+  });

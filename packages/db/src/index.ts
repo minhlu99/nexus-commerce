@@ -12,5 +12,5 @@ export const queryClient = postgres(env.DATABASE_URL, {
 
 export const db = drizzle(queryClient, { schema });
 export type Database = typeof db;
-export { and, asc, desc, eq, not, or, sql } from "drizzle-orm";
+export { and, asc, desc, eq, inArray, not, or, sql } from "drizzle-orm";
 export * from "./schema/index.js";

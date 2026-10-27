@@ -15,6 +15,7 @@ out/
 dist/
 build/
 .turbo/
+*.tsbuildinfo
 
 # Logs & Debugging
 npm-debug.log*

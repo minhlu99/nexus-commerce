@@ -1,6 +1,6 @@
 "use client";
 
-import { ShieldCheck, ShoppingBag, Sparkles, UserCheck } from "lucide-react";
+import { Package, ShieldCheck, ShoppingBag, Sparkles, UserCheck } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 import { useCart } from "@/context/cart-context";
@@ -87,6 +87,15 @@ export function Navbar() {
               {isAuthenticating ? "Authenticating..." : "1-Click Demo Login"}
             </button>
           )}
+
+          {/* Customer Orders Link */}
+          <Link
+            href="/orders"
+            className="inline-flex items-center gap-1.5 rounded-full border border-neutral-200 bg-white px-3 py-1.5 text-xs font-semibold text-neutral-700 shadow-2xs hover:bg-neutral-50 hover:text-neutral-900 transition-colors"
+          >
+            <Package className="h-3.5 w-3.5 text-emerald-600" />
+            <span>Orders</span>
+          </Link>
 
           {/* Admin Control Center Link */}
           <Link

@@ -12,7 +12,7 @@ export const orders = pgTable(
       .notNull(),
     customerId: text("customer_id").notNull(), // User identifier
     status: text("status", {
-      enum: ["pending", "paid", "processing", "shipped", "delivered", "cancelled"],
+      enum: ["pending", "paid", "processing", "shipped", "fulfilled", "delivered", "cancelled"],
     })
       .default("pending")
       .notNull(),

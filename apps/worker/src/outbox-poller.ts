@@ -1,4 +1,4 @@
-import { db, outboxEvents } from "@nexus/db";
+import { db, orders, outboxEvents } from "@nexus/db";
 import { env } from "@nexus/env";
 import { commitInventoryPurchase } from "@nexus/kv";
 import { eq } from "drizzle-orm";
@@ -39,6 +39,15 @@ export async function processOutboxBatch(): Promise<number> {
                 quantity: item.quantity,
               });
             }
+
+            // Update order status in PostgreSQL from 'pending' to 'fulfilled'
+            await tx
+              .update(orders)
+              .set({
+                status: "fulfilled",
+                updatedAt: new Date(),
+              })
+              .where(eq(orders.id, payload.orderId));
 
             // Invalidate Next.js 16 catalog cache tag for impacted products (Polish Tweak A)
             await triggerNextCacheInvalidation(["catalog", "orders"]);
