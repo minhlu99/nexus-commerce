@@ -5,7 +5,7 @@ export const outboxEvents = pgTable(
   "outbox_events",
   {
     // PostgreSQL 18 native uuidv7() for chronological B-Tree index ordering
-    id: uuid("id").default(sql`uuidv7()`).primaryKey(),
+    id: uuid("id").default(sql`uuidv7()`).primaryKey().notNull(),
     eventType: text("event_type").notNull(),
     aggregateType: text("aggregate_type").notNull(),
     aggregateId: text("aggregate_id").notNull(),

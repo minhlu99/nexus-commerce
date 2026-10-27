@@ -9,12 +9,12 @@ import {
   timestamp,
   uuid,
 } from "drizzle-orm/pg-core";
-import { stores } from "./stores.js";
+import { stores } from "./stores";
 
 export const products = pgTable(
   "products",
   {
-    id: uuid("id").default(sql`uuidv7()`).primaryKey(),
+    id: uuid("id").default(sql`uuidv7()`).primaryKey().notNull(),
     storeId: uuid("store_id")
       .references(() => stores.id, { onDelete: "cascade" })
       .notNull(),
@@ -40,7 +40,7 @@ export const products = pgTable(
 export const productVariants = pgTable(
   "product_variants",
   {
-    id: uuid("id").default(sql`uuidv7()`).primaryKey(),
+    id: uuid("id").default(sql`uuidv7()`).primaryKey().notNull(),
     productId: uuid("product_id")
       .references(() => products.id, { onDelete: "cascade" })
       .notNull(),
@@ -61,7 +61,7 @@ export const productVariants = pgTable(
 export const inventory = pgTable(
   "inventory",
   {
-    id: uuid("id").default(sql`uuidv7()`).primaryKey(),
+    id: uuid("id").default(sql`uuidv7()`).primaryKey().notNull(),
     variantId: uuid("variant_id")
       .references(() => productVariants.id, { onDelete: "cascade" })
       .notNull()

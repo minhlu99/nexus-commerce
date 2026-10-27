@@ -4,7 +4,7 @@ import { index, pgTable, text, timestamp, uuid } from "drizzle-orm/pg-core";
 export const stores = pgTable(
   "stores",
   {
-    id: uuid("id").default(sql`uuidv7()`).primaryKey(),
+    id: uuid("id").default(sql`uuidv7()`).primaryKey().notNull(),
     name: text("name").notNull(),
     slug: text("slug").notNull().unique(),
     description: text("description"),

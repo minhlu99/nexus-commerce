@@ -5,7 +5,7 @@ export const users = pgTable(
   "user",
   {
     // PostgreSQL 18 native uuidv7() for chronological B-Tree ordering
-    id: text("id").default(sql`uuidv7()::text`).primaryKey(),
+    id: text("id").default(sql`uuidv7()::text`).primaryKey().notNull(),
     name: text("name").notNull(),
     email: text("email").notNull().unique(),
     emailVerified: boolean("email_verified").default(false).notNull(),
@@ -27,7 +27,7 @@ export const users = pgTable(
 export const sessions = pgTable(
   "session",
   {
-    id: text("id").default(sql`uuidv7()::text`).primaryKey(),
+    id: text("id").default(sql`uuidv7()::text`).primaryKey().notNull(),
     userId: text("user_id")
       .references(() => users.id, { onDelete: "cascade" })
       .notNull(),
@@ -51,7 +51,7 @@ export const sessions = pgTable(
 export const accounts = pgTable(
   "account",
   {
-    id: text("id").default(sql`uuidv7()::text`).primaryKey(),
+    id: text("id").default(sql`uuidv7()::text`).primaryKey().notNull(),
     userId: text("user_id")
       .references(() => users.id, { onDelete: "cascade" })
       .notNull(),
@@ -77,7 +77,7 @@ export const accounts = pgTable(
 export const verifications = pgTable(
   "verification",
   {
-    id: text("id").default(sql`uuidv7()::text`).primaryKey(),
+    id: text("id").default(sql`uuidv7()::text`).primaryKey().notNull(),
     identifier: text("identifier").notNull(),
     value: text("value").notNull(),
     expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),

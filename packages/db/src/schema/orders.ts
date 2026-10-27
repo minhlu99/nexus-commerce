@@ -1,12 +1,12 @@
 import { sql } from "drizzle-orm";
 import { index, integer, jsonb, pgTable, text, timestamp, uuid } from "drizzle-orm/pg-core";
-import { productVariants } from "./products.js";
-import { stores } from "./stores.js";
+import { productVariants } from "./products";
+import { stores } from "./stores";
 
 export const orders = pgTable(
   "orders",
   {
-    id: uuid("id").default(sql`uuidv7()`).primaryKey(),
+    id: uuid("id").default(sql`uuidv7()`).primaryKey().notNull(),
     storeId: uuid("store_id")
       .references(() => stores.id)
       .notNull(),
@@ -47,7 +47,7 @@ export const orders = pgTable(
 export const orderItems = pgTable(
   "order_items",
   {
-    id: uuid("id").default(sql`uuidv7()`).primaryKey(),
+    id: uuid("id").default(sql`uuidv7()`).primaryKey().notNull(),
     orderId: uuid("order_id")
       .references(() => orders.id, { onDelete: "cascade" })
       .notNull(),
