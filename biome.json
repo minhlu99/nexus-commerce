@@ -33,5 +33,25 @@
       "quoteStyle": "double",
       "semicolons": "always"
     }
-  }
+  },
+  "overrides": [
+    {
+      "includes": ["apps/web/**"],
+      "linter": {
+        "rules": {
+          "style": {
+            "noRestrictedImports": {
+              "level": "error",
+              "options": {
+                "paths": {
+                  "@nexus/db": "Direct import of @nexus/db is forbidden in apps/web. Use @nexus/api RPC client to maintain strict backend separation.",
+                  "@nexus/kv": "Direct import of @nexus/kv is forbidden in apps/web. Use @nexus/api RPC client to protect cache integrity."
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  ]
 }

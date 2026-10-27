@@ -176,6 +176,9 @@ export const adminRoutes = new Hono<{ Variables: AuthVariables }>()
       status: "pending",
     });
 
+    // Zero-Latency Outbox Notification via PostgreSQL 18 LISTEN/NOTIFY
+    await db.execute(sql`NOTIFY outbox_channel`);
+
     return c.json({
       success: true,
       data: {

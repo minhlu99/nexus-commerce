@@ -22,6 +22,7 @@ FROM oven/bun:1-alpine AS runner
 WORKDIR /app
 
 ENV NODE_ENV=production
+ENV UV_THREADPOOL_SIZE=16
 
 # Copy workspace and installed dependencies from builder
 COPY --from=builder /app .

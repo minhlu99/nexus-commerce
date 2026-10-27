@@ -8,6 +8,7 @@ import {
   orders,
   outboxEvents,
   productVariants,
+  sql,
 } from "@nexus/db";
 import { commitInventoryPurchase, releaseInventoryHold, reserveInventory, valkey } from "@nexus/kv";
 import { injectTraceContext, withSpan } from "@nexus/observability";
@@ -229,6 +230,9 @@ export const ordersRoutes = new Hono<{ Variables: AuthVariables }>()
               payload: outboxPayload,
               status: "pending",
             });
+
+            // Zero-Latency Outbox Notification: triggers immediate worker pickup via LISTEN/NOTIFY
+            await tx.execute(sql`NOTIFY outbox_channel`);
 
             span.setAttribute("nexus.order_id", newOrder!.id);
             span.setAttribute("nexus.total_amount_cents", totalAmountInCents);

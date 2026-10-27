@@ -23,6 +23,7 @@ WORKDIR /app
 
 ENV NODE_ENV=production
 ENV PORT=4000
+ENV UV_THREADPOOL_SIZE=16
 
 # Copy workspace and installed dependencies from builder
 COPY --from=builder /app .

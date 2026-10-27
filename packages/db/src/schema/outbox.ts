@@ -21,6 +21,8 @@ export const outboxEvents = pgTable(
     processedAt: timestamp("processed_at", { withTimezone: true }),
   },
   (table) => [
+    // High-performance partial index: keeps index size near 0 bytes regardless of historical volume
+    index("idx_outbox_pending").on(table.createdAt).where(sql`status = 'pending'`),
     index("outbox_status_created_idx").on(table.status, table.createdAt),
     index("outbox_aggregate_idx").on(table.aggregateType, table.aggregateId),
   ],

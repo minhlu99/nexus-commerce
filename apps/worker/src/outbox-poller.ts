@@ -1,4 +1,4 @@
-import { db, outboxEvents } from "@nexus/db";
+import { db, outboxEvents, sql } from "@nexus/db";
 import {
   fulfillmentQueue,
   type OrderFulfillmentJobData,
@@ -108,4 +108,21 @@ export async function processOutboxBatch(): Promise<number> {
 
     return pendingEvents.length;
   });
+}
+
+/**
+ * Stage 1 Maintenance: TTL Archival Pruner
+ * Batched deletion of completed outbox rows older than 24h to prevent MVCC table bloat.
+ */
+export async function pruneCompletedOutboxEvents(): Promise<number> {
+  const result = await db.execute(sql`
+    DELETE FROM outbox_events 
+    WHERE id IN (
+      SELECT id FROM outbox_events 
+      WHERE status = 'completed' 
+        AND processed_at < NOW() - INTERVAL '24 hours' 
+      LIMIT 5000
+    );
+  `);
+  return result.count ?? 0;
 }
