@@ -10,7 +10,11 @@ import {
 import { W3CTraceContextPropagator } from "@opentelemetry/core";
 import { OTLPTraceExporter } from "@opentelemetry/exporter-trace-otlp-http";
 import { Resource } from "@opentelemetry/resources";
-import { NodeTracerProvider, SimpleSpanProcessor } from "@opentelemetry/sdk-trace-node";
+import {
+  BatchSpanProcessor,
+  NodeTracerProvider,
+  SimpleSpanProcessor,
+} from "@opentelemetry/sdk-trace-node";
 import { ATTR_SERVICE_NAME } from "@opentelemetry/semantic-conventions";
 
 let isInitialized = false;
@@ -38,8 +42,18 @@ export function initTelemetry(serviceName: string) {
     resource,
   });
 
-  // Use SimpleSpanProcessor for real-time immediate span dispatch to Jaeger
-  provider.addSpanProcessor(new SimpleSpanProcessor(exporter));
+  // Use BatchSpanProcessor for non-blocking asynchronous span buffering
+  // Eliminates event loop contention during high-concurrency spikes (p99 ~175ms)
+  const spanProcessor =
+    process.env.OTEL_USE_SIMPLE_SPAN_PROCESSOR === "true"
+      ? new SimpleSpanProcessor(exporter)
+      : new BatchSpanProcessor(exporter, {
+          maxQueueSize: 4096,
+          scheduledDelayMillis: 500,
+          maxExportBatchSize: 512,
+        });
+
+  provider.addSpanProcessor(spanProcessor);
 
   // Configure W3C Trace Context propagator
   propagation.setGlobalPropagator(new W3CTraceContextPropagator());

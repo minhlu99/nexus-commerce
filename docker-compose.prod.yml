@@ -1,0 +1,128 @@
+services:
+  postgres:
+    image: postgres:18-alpine
+    container_name: nexus-postgres-prod
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: nexus
+      POSTGRES_PASSWORD: nexus_password
+      POSTGRES_DB: nexus_commerce
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_prod_data:/var/lib/postgresql
+    command:
+      - "postgres"
+      - "-c"
+      - "io_method=worker"
+      - "-c"
+      - "io_combine_limit=256kB"
+      - "-c"
+      - "max_connections=200"
+      - "-c"
+      - "shared_buffers=512MB"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U nexus -d nexus_commerce"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  valkey:
+    image: valkey/valkey:9.1-alpine
+    container_name: nexus-valkey-prod
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - valkey_prod_data:/data
+    command: valkey-server --appendonly yes --appendfsync everysec --maxmemory-policy noeviction
+    healthcheck:
+      test: ["CMD", "valkey-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  jaeger:
+    image: jaegertracing/all-in-one:latest
+    container_name: nexus-jaeger-prod
+    restart: unless-stopped
+    environment:
+      - COLLECTOR_OTLP_ENABLED=true
+    ports:
+      - "16686:16686"
+      - "4317:4317"
+      - "4318:4318"
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:16686/ || exit 1"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  api:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    container_name: nexus-api-prod
+    restart: unless-stopped
+    ports:
+      - "4000:4000"
+    environment:
+      NODE_ENV: production
+      PORT: 4000
+      DATABASE_URL: postgres://nexus:nexus_password@postgres:5432/nexus_commerce
+      VALKEY_URL: redis://valkey:6379
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://jaeger:4318/v1/traces
+      BETTER_AUTH_SECRET: better-auth-secret-string-at-least-16-chars
+      BETTER_AUTH_URL: http://localhost:4000
+      NEXT_PUBLIC_APP_URL: http://localhost:3000
+      NEXT_PUBLIC_API_URL: http://localhost:4000
+    depends_on:
+      postgres:
+        condition: service_healthy
+      valkey:
+        condition: service_healthy
+      jaeger:
+        condition: service_healthy
+
+  worker:
+    build:
+      context: .
+      dockerfile: apps/worker/Dockerfile
+    container_name: nexus-worker-prod
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: postgres://nexus:nexus_password@postgres:5432/nexus_commerce
+      VALKEY_URL: redis://valkey:6379
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://jaeger:4318/v1/traces
+      NEXT_PUBLIC_APP_URL: http://web:3000
+      REVALIDATE_SECRET: super-secret-revalidation-token-min-16-chars
+    depends_on:
+      postgres:
+        condition: service_healthy
+      valkey:
+        condition: service_healthy
+      jaeger:
+        condition: service_healthy
+
+  web:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+    container_name: nexus-web-prod
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      HOSTNAME: "0.0.0.0"
+      NEXT_PUBLIC_API_URL: http://localhost:4000
+      NEXT_PUBLIC_APP_URL: http://localhost:3000
+      REVALIDATE_SECRET: super-secret-revalidation-token-min-16-chars
+    depends_on:
+      - api
+
+volumes:
+  postgres_prod_data:
+  valkey_prod_data:
